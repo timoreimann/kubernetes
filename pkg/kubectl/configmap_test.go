@@ -157,12 +157,33 @@ func TestConfigMapGenerate(t *testing.T) {
 			expectErr: true,
 		},
 		{
-			setup: setupEnvFile("key.1=value1"),
+			setup: func() func(t *testing.T, params map[string]interface{}) func() {
+				if err := os.Setenv("key.1", "bar"); err != nil {
+					t.Errorf("failed to set environment variable 'key.1' to 'bar': %s", err)
+				}
+				return setupEnvFile("key.1")
+			}(),
 			params: map[string]interface{}{
-				"name":          "invalid_key",
+				"name":          "dotted_pass_through_env_var",
 				"from-env-file": "file.env",
 			},
 			expectErr: true,
+		},
+		{
+			setup: setupEnvFile("key.1=value1"),
+			params: map[string]interface{}{
+				"name":          "dotted_key",
+				"from-env-file": "file.env",
+			},
+			expected: &api.ConfigMap{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: "dotted_key",
+				},
+				Data: map[string]string{
+					"key.1": "value1",
+				},
+			},
+			expectErr: false,
 		},
 		{
 			setup: setupEnvFile("  key1=  value1"),

@@ -56,9 +56,6 @@ func addFromEnvFile(filePath string, addTo func(key, value string) error) error 
 		if len(line) > 0 && !strings.HasPrefix(line, "#") {
 			data := strings.SplitN(line, "=", 2)
 			key := data[0]
-			if errs := validation.IsCIdentifier(key); len(errs) != 0 {
-				return fmt.Errorf("%q is not a valid key name: %s", key, strings.Join(errs, ";"))
-			}
 
 			value := ""
 			if len(data) > 1 {
@@ -66,6 +63,9 @@ func addFromEnvFile(filePath string, addTo func(key, value string) error) error 
 				value = data[1]
 			} else {
 				// a pass-through variable is given
+				if errs := validation.IsCIdentifier(key); len(errs) != 0 {
+					return fmt.Errorf("%q is not a valid key name: %s", key, strings.Join(errs, ";"))
+				}
 				value = os.Getenv(key)
 			}
 			if err = addTo(key, value); err != nil {

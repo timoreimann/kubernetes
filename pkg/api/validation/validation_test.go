@@ -2534,6 +2534,7 @@ func TestValidateEnv(t *testing.T) {
 		{Name: "ABC", Value: "value"},
 		{Name: "AbC_123", Value: "value"},
 		{Name: "abc", Value: ""},
+		{Name: "a.b.c", Value: "value"},
 		{
 			Name: "abc",
 			ValueFrom: &api.EnvVarSource{
@@ -2615,11 +2616,6 @@ func TestValidateEnv(t *testing.T) {
 			name:          "zero-length name",
 			envs:          []api.EnvVar{{Name: ""}},
 			expectedError: "[0].name: Required value",
-		},
-		{
-			name:          "name not a C identifier",
-			envs:          []api.EnvVar{{Name: "a.b.c"}},
-			expectedError: `[0].name: Invalid value: "a.b.c": ` + idErrMsg,
 		},
 		{
 			name: "value and valueFrom specified",

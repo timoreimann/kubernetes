@@ -24,7 +24,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/kubernetes/pkg/api"
 	"k8s.io/kubernetes/pkg/api/v1"
 	appsv1beta1 "k8s.io/kubernetes/pkg/apis/apps/v1beta1"
@@ -858,9 +857,6 @@ func parseEnvs(envArray []string) ([]v1.EnvVar, error) {
 		name := env[:pos]
 		value := env[pos+1:]
 		if len(name) == 0 {
-			return nil, fmt.Errorf("invalid env: %v", env)
-		}
-		if len(validation.IsCIdentifier(name)) != 0 {
 			return nil, fmt.Errorf("invalid env: %v", env)
 		}
 		envVar := v1.EnvVar{Name: name, Value: value}

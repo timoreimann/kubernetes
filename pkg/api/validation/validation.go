@@ -1490,10 +1490,6 @@ func ValidateEnv(vars []api.EnvVar, fldPath *field.Path) field.ErrorList {
 		idxPath := fldPath.Index(i)
 		if len(ev.Name) == 0 {
 			allErrs = append(allErrs, field.Required(idxPath.Child("name"), ""))
-		} else {
-			for _, msg := range validation.IsCIdentifier(ev.Name) {
-				allErrs = append(allErrs, field.Invalid(idxPath.Child("name"), ev.Name, msg))
-			}
 		}
 		allErrs = append(allErrs, validateEnvVarValueFrom(ev, idxPath.Child("valueFrom"))...)
 	}
