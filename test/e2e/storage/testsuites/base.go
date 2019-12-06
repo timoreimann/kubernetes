@@ -199,7 +199,7 @@ func createGenericVolumeTestResource(driver TestDriver, config *PerTestConfig, p
 		e2elog.Logf("Creating resource for inline volume")
 		if iDriver, ok := driver.(InlineVolumeTestDriver); ok {
 			r.volSource = iDriver.GetVolumeSource(false, pattern.FsType, r.volume)
-			r.volType = dInfo.Name
+			r.volType = shortenCSIDriverName(dInfo.Name)
 		}
 	case testpatterns.PreprovisionedPV:
 		e2elog.Logf("Creating resource for pre-provisioned PV")
@@ -209,7 +209,7 @@ func createGenericVolumeTestResource(driver TestDriver, config *PerTestConfig, p
 				r.pv, r.pvc = createPVCPV(f, dInfo.Name, pvSource, volumeNodeAffinity, pattern.VolMode, dInfo.RequiredAccessModes)
 				r.volSource = createVolumeSource(r.pvc.Name, false /* readOnly */)
 			}
-			r.volType = fmt.Sprintf("%s-preprovisionedPV", dInfo.Name)
+			r.volType = fmt.Sprintf("%s-preprovisionedPV", shortenCSIDriverName(dInfo.Name))
 		}
 	case testpatterns.DynamicPV:
 		e2elog.Logf("Creating resource for dynamic PV")
@@ -234,7 +234,7 @@ func createGenericVolumeTestResource(driver TestDriver, config *PerTestConfig, p
 					f, dInfo.Name, claimSize, r.sc, pattern.VolMode, dInfo.RequiredAccessModes)
 				r.volSource = createVolumeSource(r.pvc.Name, false /* readOnly */)
 			}
-			r.volType = fmt.Sprintf("%s-dynamicPV", dInfo.Name)
+			r.volType = fmt.Sprintf("%s-dynamicPV", shortenCSIDriverName(dInfo.Name))
 		}
 	default:
 		e2elog.Failf("genericVolumeTestResource doesn't support: %s", pattern.VolType)
@@ -624,4 +624,23 @@ func skipVolTypePatterns(pattern testpatterns.TestPattern, driver TestDriver, sk
 	if supportsProvisioning && skipVolTypes[pattern.VolType] {
 		framework.Skipf("Driver supports dynamic provisioning, skipping %s pattern", pattern.VolType)
 	}
+}
+
+// shortenCSIDriverName takes a CSI driver name (which must be conformant to the
+// domain name system notation) and shortens it by reducing each label to its
+// first letter.
+// For example, a name like my.driver.acme.com becomes m.d.a.c.
+// This enables to use CSI driver names in length-restricted contexts (e.g.,
+// prefix-/suffix-enriched pod names that are limited to 63 characters).
+func shortenCSIDriverName(name string) string {
+	if !strings.Contains(name, ".") {
+		return name
+	}
+
+	var shortLabels []string
+	for _, shortLabel := range strings.Split(name, ".") {
+		shortLabels = append(shortLabels, string(shortLabel[0]))
+	}
+
+	return strings.Join(shortLabels, ".")
 }
