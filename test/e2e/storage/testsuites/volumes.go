@@ -204,7 +204,7 @@ func testScriptInPod(
 		volPath = "/vol1"
 		volName = "vol1"
 	)
-	suffix := generateSuffixForPodName(volumeType)
+	suffix := generateSuffix()
 	fileName := fmt.Sprintf("test-%s", suffix)
 	var content string
 	if framework.NodeOSDistroIs("windows") {
