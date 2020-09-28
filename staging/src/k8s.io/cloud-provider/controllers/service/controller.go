@@ -18,14 +18,14 @@ package service
 
 import (
 	"context"
-	stderrors "errors"
+	"errors"
 	"fmt"
 	"reflect"
 	"sync"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/util/runtime"
 	"k8s.io/apimachinery/pkg/util/sets"
@@ -275,7 +275,7 @@ func (s *Controller) processNextWorkItem() bool {
 	}
 
 	var re *api.RetryError
-	if stderrors.As(err, &re) {
+	if errors.As(err, &re) {
 		klog.V(4).Infof("Retrying processing for service %s in %s", key, re.RetryAfter())
 		s.queue.AddAfter(key, re.RetryAfter())
 	} else {
@@ -404,7 +404,7 @@ func (s *Controller) syncLoadBalancerIfNeeded(service *v1.Service, key string) (
 		// - Not found error mostly happens when service disappears right after
 		//   we remove the finalizer.
 		// - We can't patch status on non-exist service anyway.
-		if !errors.IsNotFound(err) {
+		if !apierrors.IsNotFound(err) {
 			return op, fmt.Errorf("failed to update load balancer status: %v", err)
 		}
 	}
@@ -806,7 +806,7 @@ func (s *Controller) syncService(key string) error {
 	// service holds the latest service info from apiserver
 	service, err := s.serviceLister.Services(namespace).Get(name)
 	switch {
-	case errors.IsNotFound(err):
+	case apierrors.IsNotFound(err):
 		// service absence in store means watcher caught the deletion, ensure LB info is cleaned
 		err = s.processServiceDeletion(key)
 	case err != nil:
